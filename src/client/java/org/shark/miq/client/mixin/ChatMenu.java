@@ -39,6 +39,10 @@ public class ChatMenu {
             return;
         }
 
+        if (LastMessageTemp.LastMessage == null) {
+            return;
+        }
+
         String messageString = LastMessageTemp.LastMessage
                 .content()
                 .getString()
