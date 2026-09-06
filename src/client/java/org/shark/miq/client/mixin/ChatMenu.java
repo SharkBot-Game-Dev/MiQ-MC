@@ -18,24 +18,51 @@ import java.util.concurrent.ExecutionException;
 
 @Mixin(ChatScreen.class)
 public class ChatMenu {
-    @Inject(method = "handleChatInput", at= @At("HEAD"), cancellable = true)
-    public void handleChatInput(String msg, final boolean addToRecent, CallbackInfo ci) {
-        if (!msg.isEmpty()) {
-            String lowerString = msg.toLowerCase();
-            if (lowerString.startsWith("@miq")) {
-                String messageString = LastMessageTemp.LastMessage.content().getString().replaceAll("\r", "\\\\r").replaceAll("\n", "\\\\n");
-                String logTag = (String) Optionull.map(LastMessageTemp.LastMessage.tag(), GuiMessageTag::logTag);
 
-                CompletableFuture<Path> miqPath = new FetchMiQ().fetchMiQ(messageString);
-                try {
-                    Path path = miqPath.get();
-
-                    Minecraft.getInstance().setScreen(new MiQScreen(path));
-                    ci.cancel();
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
-                }
-            }
+    @Inject(
+            method = "handleChatInput",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    public void handleChatInput(
+            String msg,
+            final boolean addToRecent,
+            CallbackInfo ci
+    ) {
+        if (msg.isEmpty()) {
+            return;
         }
+
+        String lowerString = msg.toLowerCase();
+
+        if (!lowerString.startsWith("@miq")) {
+            return;
+        }
+
+        String messageString = LastMessageTemp.LastMessage
+                .content()
+                .getString()
+                .replace("\r", "\\r")
+                .replace("\n", "\\n");
+
+        String authorName = messageString.split(">")[0].split("<")[1];
+
+        CompletableFuture<Path> future =
+                new FetchMiQ().fetchMiQ(messageString, authorName);
+
+        future.thenAccept(path -> {
+            Minecraft.getInstance().execute(() -> {
+                System.out.println("Opening MiQScreen: " + path);
+
+                Minecraft.getInstance().setScreen(
+                        new MiQScreen(path)
+                );
+            });
+        }).exceptionally(error -> {
+            error.printStackTrace();
+            return null;
+        });
+
+        ci.cancel();
     }
 }

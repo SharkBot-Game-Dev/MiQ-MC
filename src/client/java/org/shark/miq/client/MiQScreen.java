@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
@@ -16,45 +17,62 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class MiQScreen extends Screen {
-    Path miqImagePath;
+
+    private final Path miqImagePath;
 
     private DynamicTexture texture;
     private Identifier textureId;
 
-    public MiQScreen(Path imagePath) {
-        super(Component.literal("MiQ Viewer"));
-
-        miqImagePath = imagePath;
-    }
-
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss_SSS");
 
+    public MiQScreen(Path imagePath) {
+        super(Component.literal("MiQ Viewer"));
+        this.miqImagePath = imagePath;
+    }
+
     @Override
     protected void init() {
+        super.init();
+
         try {
             String fileName = LocalDateTime.now().format(FORMATTER);
 
-            NativeImage image = NativeImage.read(Files.newInputStream(miqImagePath));
+            NativeImage image;
+
+            try (var input = Files.newInputStream(miqImagePath)) {
+                image = NativeImage.read(input);
+            }
+
+            System.out.println("Loading image: " + miqImagePath);
+            System.out.println("Image size: "
+                    + image.getWidth() + "x" + image.getHeight());
 
             texture = new DynamicTexture(
                     () -> "miq_image_" + fileName,
                     image
             );
 
-            Identifier indClass = Identifier.parse("miq_image_" + fileName);
+            textureId = Identifier.fromNamespaceAndPath(
+                    "miq",
+                    "image/" + fileName
+            );
 
             Minecraft.getInstance()
                     .getTextureManager()
-                    .register(
-                            indClass,
-                            texture
-                    );
+                    .register(textureId, texture);
 
-            textureId = indClass;
+            System.out.println("Texture registered: " + textureId);
+
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
+
+        Button closeButton = Button.builder(Component.literal("Close"), (btn) -> {
+            this.minecraft.setScreen(null);
+        }).bounds(10, 210, 120, 20).build();
+
+        this.addRenderableWidget(closeButton);
     }
 
     @Override
@@ -64,24 +82,31 @@ public class MiQScreen extends Screen {
             int mouseY,
             float delta
     ) {
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        super.extractRenderState(
+                graphics,
+                mouseX,
+                mouseY,
+                delta
+        );
 
-        if (textureId == null || texture == null) {
+        if (textureId == null) {
             return;
         }
 
         graphics.blit(
                 RenderPipelines.GUI_TEXTURED,
                 textureId,
-                50,
-                50,
-                0,
-                0,
-                256,
-                256,
+                10,
+                30,
+                0.0f,
+                0.0f,
+                300,
+                150,
                 texture.getPixels().getWidth(),
                 texture.getPixels().getHeight()
         );
+
+        graphics.text(this.font, "Done!", 10, 10, 0xFFFFFFFF, true);
     }
 
     @Override
@@ -90,6 +115,9 @@ public class MiQScreen extends Screen {
             Minecraft.getInstance()
                     .getTextureManager()
                     .release(textureId);
+
+            textureId = null;
+            texture = null;
         }
 
         super.onClose();
