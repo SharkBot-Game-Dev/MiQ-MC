@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "miq",
+  "version": "${version}",
+  "name": "MiQ Client",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/miq/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-datagen": [
+      "org.shark.miq.client.MiqDataGenerator"
+    ],
+    "client": [
+      "org.shark.miq.client.MiqClient"
+    ],
+    "main": [
+      "org.shark.miq.Miq"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  },
+  "mixins": [
+    "miq.client.mixins.json"
+  ]
+}
