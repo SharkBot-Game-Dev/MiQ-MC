@@ -51,8 +51,11 @@ public class ChatMenu {
 
         String authorName = messageString.split(">")[0].split("<")[1];
 
+        String prefix = "<" + authorName + ">";
+        String removedAuthorNameContent = messageString.startsWith(prefix) ? messageString.substring(prefix.length()) : messageString;
+
         CompletableFuture<Path> future =
-                new FetchMiQ().fetchMiQ(messageString, authorName);
+                new FetchMiQ().fetchMiQ(removedAuthorNameContent, authorName);
 
         future.thenAccept(path -> {
             Minecraft.getInstance().execute(() -> {
