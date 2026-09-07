@@ -40,8 +40,11 @@ public class ChatMenu {
         }
 
         if (LastMessageTemp.LastMessage == null) {
+            ci.cancel();
             return;
         }
+
+        boolean isColor = !msg.contains("gray");
 
         String messageString = LastMessageTemp.LastMessage
                 .content()
@@ -55,7 +58,7 @@ public class ChatMenu {
         String removedAuthorNameContent = messageString.startsWith(prefix) ? messageString.substring(prefix.length()) : messageString;
 
         CompletableFuture<Path> future =
-                new FetchMiQ().fetchMiQ(removedAuthorNameContent, authorName);
+                new FetchMiQ().fetchMiQ(removedAuthorNameContent, authorName, isColor);
 
         future.thenAccept(path -> {
             Minecraft.getInstance().execute(() -> {

@@ -32,7 +32,7 @@ public class FetchMiQ {
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss_SSS");
 
-    public CompletableFuture<Path> fetchMiQ(String text, String authorName) {
+    public CompletableFuture<Path> fetchMiQ(String text, String authorName, boolean Color) {
 
         String encodedText = URLEncoder.encode(
                 text,
@@ -44,9 +44,12 @@ public class FetchMiQ {
                 java.nio.charset.StandardCharsets.UTF_8
         );
 
+        String apiUrl= "https://miq.sharkbot.xyz/?text="
+                + encodedText + "&avatar_url=" + avatarUrl + "&author=" + authorName + "&mc=True" + "&color=" + (Color ? "True" : "False");
+
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(
-                        "https://miq.sharkbot.xyz/?text=" + encodedText + "&avatar_url=" + avatarUrl + "&author=" + authorName + "&mc=True"
+                        apiUrl
                 ))
                 .timeout(java.time.Duration.ofSeconds(15))
                 .header("Accept", "image/png,image/jpeg,image/*")
