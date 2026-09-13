@@ -1,9 +1,7 @@
 package org.shark.miq.client.mixin;
 
-import net.minecraft.Optionull;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
-import net.minecraft.client.multiplayer.chat.GuiMessageTag;
 import org.shark.miq.client.FetchMiQ;
 import org.shark.miq.client.LastMessageTemp;
 import org.shark.miq.client.MiQScreen;
@@ -64,7 +62,7 @@ public class ChatMenu {
             Minecraft.getInstance().execute(() -> {
                 System.out.println("Opening MiQScreen: " + path);
 
-                Minecraft.getInstance().setScreen(
+                Minecraft.getInstance().gui.setScreen(
                         new MiQScreen(path)
                 );
             });

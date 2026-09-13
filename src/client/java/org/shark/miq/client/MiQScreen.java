@@ -69,7 +69,7 @@ public class MiQScreen extends Screen {
         }
 
         Button closeButton = Button.builder(Component.literal("Close"), (btn) -> {
-            this.minecraft.setScreen(null);
+            this.minecraft.gui.setScreen(null);
         }).bounds(10, 210, 120, 20).build();
 
         this.addRenderableWidget(closeButton);
