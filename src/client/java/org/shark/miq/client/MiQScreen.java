@@ -9,12 +9,14 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.Player;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.CompletableFuture;
 
 public class MiQScreen extends Screen {
 
@@ -23,12 +25,18 @@ public class MiQScreen extends Screen {
     private DynamicTexture texture;
     private Identifier textureId;
 
+    public String MiQText;
+    public String MiQUserName;
+    public boolean isColor = true;
+
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss_SSS");
 
-    public MiQScreen(Path imagePath) {
+    public MiQScreen(Path imagePath, String text) {
         super(Component.literal("MiQ Viewer"));
         this.miqImagePath = imagePath;
+
+        this.MiQText = text;
     }
 
     @Override
@@ -70,9 +78,37 @@ public class MiQScreen extends Screen {
 
         Button closeButton = Button.builder(Component.literal("Close"), (btn) -> {
             this.minecraft.gui.setScreen(null);
-        }).bounds(10, 210, 120, 20).build();
+        }).bounds(10, 200, 120, 20).build();
+
+        Button colorButton = Button.builder(Component.literal((isColor ? "Color" : "No Color")), (btn) -> {
+            this.minecraft.gui.setScreen(null);
+
+            Player player = Minecraft.getInstance().player;
+            if (player != null) {
+                player.sendSystemMessage(Component.literal("生成中..."));
+            }
+
+            CompletableFuture<Path> future =
+                    new FetchMiQ().fetchMiQ(MiQText, MiQUserName, !isColor);
+
+            future.thenAccept(path -> {
+                Minecraft.getInstance().execute(() -> {
+                    MiQScreen screen = new MiQScreen(path, MiQUserName);
+                    screen.MiQUserName = MiQUserName;
+                    screen.isColor = !isColor;
+
+                    Minecraft.getInstance().gui.setScreen(
+                            screen
+                    );
+                });
+            }).exceptionally(error -> {
+                error.printStackTrace();
+                return null;
+            });
+        }).bounds(10, 180, 60, 20).build();
 
         this.addRenderableWidget(closeButton);
+        this.addRenderableWidget(colorButton);
     }
 
     @Override

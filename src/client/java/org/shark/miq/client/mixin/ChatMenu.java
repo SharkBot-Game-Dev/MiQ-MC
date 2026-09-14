@@ -2,6 +2,8 @@ package org.shark.miq.client.mixin;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 import org.shark.miq.client.FetchMiQ;
 import org.shark.miq.client.LastMessageTemp;
 import org.shark.miq.client.MiQScreen;
@@ -38,6 +40,10 @@ public class ChatMenu {
         }
 
         if (LastMessageTemp.LastMessage == null) {
+            Player player = Minecraft.getInstance().player;
+            if (player != null) {
+                player.sendSystemMessage(Component.literal("There are no images suitable for turning into a quote."));
+            }
             ci.cancel();
             return;
         }
@@ -60,10 +66,11 @@ public class ChatMenu {
 
         future.thenAccept(path -> {
             Minecraft.getInstance().execute(() -> {
-                System.out.println("Opening MiQScreen: " + path);
+                MiQScreen screen = new MiQScreen(path, removedAuthorNameContent);
+                screen.MiQUserName = authorName;
 
                 Minecraft.getInstance().gui.setScreen(
-                        new MiQScreen(path)
+                        screen
                 );
             });
         }).exceptionally(error -> {
